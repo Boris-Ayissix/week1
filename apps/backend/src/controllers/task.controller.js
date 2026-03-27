@@ -11,6 +11,7 @@ export const createTaskController = (req, res) => {
   }
 };
 
+
 export const getTasksController = (req, res) => {
   res.json(fetchTasks());
 };
