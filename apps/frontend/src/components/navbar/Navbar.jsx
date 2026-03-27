@@ -1,26 +1,28 @@
-// Navbar.jsx
-// Purpose: Top navigation with clickable logo (routes to home)
-
-import React from "react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  const handleLogoClick = () => {
-    globalThis.location.href = "/";
-  };
-
   return (
-    <nav className="w-full flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md shadow-sm">
+    <nav className="w-full flex justify-between items-center px-6 py-4 bg-white shadow">
       
-      {/* Logo */}
-      <button
-        onClick={handleLogoClick}
-        className="text-2xl font-bold cursor-pointer bg-gradient-to-r from-indigo-500 to-pink-500 bg-clip-text text-transparent"
-      >
-        Ayissi Boris
-      </button>
+      <h1 className="font-bold text-lg">
+        Boris Dev
+      </h1>
 
-      {/* Future nav items */}
-      <div></div>
+      <div className="flex gap-6">
+        <Link 
+          to="/" 
+          className="text-gray-700 hover:text-indigo-600"
+        >
+          Home
+        </Link>
+
+        <Link 
+          to="/dashboard" 
+          className="text-gray-700 hover:text-indigo-600"
+        >
+          Dashboard
+        </Link>
+      </div>
 
     </nav>
   );
