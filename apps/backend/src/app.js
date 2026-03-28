@@ -8,7 +8,9 @@ import analyticsRoutes from "./routes/analytics.routes.js";
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "*", // tighten later
+}));
 app.use(express.json());
 
 // Routes
