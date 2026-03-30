@@ -24,3 +24,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+export default app;   // ← Important: Export the app so server.js can import it
