@@ -1,12 +1,6 @@
-// Purpose: Fetch analytics data from backend
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const fetchAnalytics = async () => {
-  try {
-    const res = await fetch("http://localhost:5000/api/analytics");
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching analytics:", error);
-    return [];
-  }
+  const res = await fetch(`${BASE_URL}/analytics`);
+  return res.json();
 };
