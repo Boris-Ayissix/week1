@@ -1,6 +1,6 @@
 const Footer = () => {
   return (
-    <footer className="bg-white border-t mt-10 py-6 text-center text-gray-500 text-sm">
+    <footer className="text-center text-sm text-gray-500 py-6">
       © {new Date().getFullYear()} Boris Ayissi. All rights reserved.
     </footer>
   );

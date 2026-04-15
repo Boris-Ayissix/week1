@@ -1,6 +1,13 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const fetchAnalytics = async () => {
-  const res = await fetch(`${BASE_URL}/analytics`);
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/api/analytics`);
+    const data = await res.json();
+    console.log("FETCHED EVENTS:", data); // debug
+    return data;
+  } catch (err) {
+    console.error("Fetch error:", err);
+    return [];
+  }
 };
