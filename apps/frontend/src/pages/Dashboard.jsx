@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { StatCard } from "../components/dashboard/StatCard";
-import { Briefcase, Users, BarChart3,Eye} from "lucide-react";
+import { Briefcase, Users, BarChart3,Eye, X, CurrencyDollar} from "lucide-react";
 import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
 
 
@@ -203,12 +203,12 @@ const Dashboard = () => {
           />
         <StatCard 
           title="Mentorship"
-          value={summary.memberships || 0}
+          value={summary.MENTOR_ME || 0}
           icon={Users}
         />
         <StatCard 
           title="Coffee Chats"
-          value={summary.coffee_chats || 0}
+          value={summary.COFFEE_CHAT || 0}
           icon={Users}
         />
         <StatCard 
@@ -233,6 +233,25 @@ const Dashboard = () => {
           title="Free Help Modal Opens"
           value={summary.FREE_HELP_MODAL_OPENS || 0}
           icon={Users}
+        />
+
+        <StatCard 
+          title="Close via X"
+          value={closeByX|| 0}
+          icon={X}
+        />
+
+        <StatCard 
+          title="Estimated Revenue"
+          value={`$${summary.revenue || 0}`}
+          icon={CurrencyDollar}
+        />
+
+
+        <StatCard
+          title="Top Plan"
+          value={summary.top_plan || "—"}
+          icon={BarChart3}
         />
 
       </div>

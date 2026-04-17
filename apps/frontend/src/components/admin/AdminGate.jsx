@@ -24,21 +24,42 @@ const AdminGate = ({ children }) => {
 
   if (!isAuth) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h2 className="mb-4 font-semibold">Admin Access</h2>
-          <input
-            type="password"
-            placeholder="Enter password"
-            className="border p-2 w-full mb-3"
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button
-            onClick={handleLogin}
-            className="bg-black text-white px-4 py-2 w-full rounded"
-          >
-            Enter
-          </button>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100">
+
+    <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
+
+      {/* TITLE */}
+      <h2 className="text-2xl font-bold text-center mb-2">
+        Admin Dashboard
+      </h2>
+
+      <p className="text-sm text-gray-500 text-center mb-6">
+        Secure access to analytics
+      </p>
+
+      {/* INPUT */}
+      <input
+        type="password"
+        placeholder="Enter admin password"
+        className="
+          border p-3 w-full mb-4 rounded-lg
+          focus:outline-none focus:ring-2 focus:ring-purple-500
+        "
+        onChange={(e) => setInput(e.target.value)}
+      />
+
+      {/* BUTTON */}
+      <button
+        onClick={handleLogin}
+        className="
+          w-full py-3 rounded-lg text-white font-medium
+          bg-gradient-to-r from-purple-600 to-pink-500
+          hover:scale-105 transition
+        "
+      >
+        Access Dashboard
+      </button>
+
         </div>
       </div>
     );
