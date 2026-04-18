@@ -15,7 +15,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",//local dev
-  "https://branding-website-five.vercel.app"//production frontend
+  "https://branding-website-five.vercel.app",//production frontend
+  "https://brandingwebsite-git-main-boris-ayissixs-projects.vercel.app"
 ];
 
 app.use(cors({
@@ -29,10 +30,14 @@ app.use(cors({
       return callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "x-admin-password"],
+  credentials: false
 
 }));
+
+
+
 app.use(express.json());
 
 
