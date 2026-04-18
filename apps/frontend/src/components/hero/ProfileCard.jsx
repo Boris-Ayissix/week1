@@ -30,11 +30,11 @@ const ProfileCard = () => {
         group-hover:opacity-80
         " />     */}
 
-    {/* ========================= */}
+      {/* ========================= */}
       {/* PROFILE CARD */}
-      {/* - Added relative wrapper
-          - Added group hover for coordinated animations
-          - Added micro-interactions (scale + glow)
+      {/* - Added relative wrapper*/}
+      {/*   - Added group hover for coordinated animations*/}
+      {/*  - Added micro-interactions (scale + glow)*/}
       {/* ========================= */}
       <div className="bg-white shadow-xl rounded-2xl p-6 w-full text-center z-10
       transition-all duration-300
