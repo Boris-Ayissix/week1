@@ -75,11 +75,11 @@ const Dashboard = () => {
       setEvents(Array.isArray(eventsData) ? eventsData : []);
 
       // 🔹 Fetch SUMMARY (for KPIs)
-      const summaryRes = await fetch(`${BASE_URL}/api/analytics/summary?password=${import.meta.env.VITE_ADMIN_PASSWORD}`, {
-        headers: {
-          "x-admin-password": import.meta.env.VITE_ADMIN_PASSWORD,
-        },
-      });
+      const summaryRes = await fetch(`${BASE_URL}/api/analytics/summary`, {
+      headers: {
+        "x-admin-password": import.meta.env.VITE_ADMIN_PASSWORD,
+      },
+    });
 
       const summaryData = await summaryRes.json();
 
