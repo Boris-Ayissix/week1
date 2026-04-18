@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { StatCard } from "../components/dashboard/StatCard";
-import { Briefcase, Users, BarChart3,Eye, X, CurrencyDollar} from "lucide-react";
+import { Briefcase, Users, BarChart3,Eye, X, DollarSign} from "lucide-react";
 import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
 
 
@@ -191,6 +191,20 @@ const Dashboard = () => {
         { name: "Coffee", value: summary.COFFEE_CHAT || 0 },
       ]
 
+      const formatPlan = (plan) => {
+      if (!plan || plan === "No data yet") return "—";
+
+          const [type, tier] = plan.split("_");
+
+          const labels = {
+            DELIVER_PROJECT: "Deliver",
+            MENTOR_ME: "Mentor",
+            COFFEE_CHAT: "Coffee",
+          };
+
+          return `${labels[type]} - ${tier}`;
+        };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-10">
       <h1 className="text-xl font-bold mb-6">Dashboard</h1>
@@ -244,13 +258,13 @@ const Dashboard = () => {
         <StatCard 
           title="Estimated Revenue"
           value={`$${summary.revenue || 0}`}
-          icon={CurrencyDollar}
+          icon={DollarSign}
         />
 
 
         <StatCard
           title="Top Plan"
-          value={summary.top_plan || "—"}
+          value={formatPlan(summary.top_plan)}
           icon={BarChart3}
         />
 
