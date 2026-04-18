@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
+fetch(`${API_URL}/api/tasks`);
+
 export const fetchAnalytics = async () => {
   try {
     const res = await fetch(`${API_URL}/api/analytics`);
