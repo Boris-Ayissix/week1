@@ -1,25 +1,14 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
-  "type": "module",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
-    "dev": "node src/server.js",
-    "test": "jest"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@repo/shared": "^1.0.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1"
-  },
-  "devDependencies": {
-    "jest": "^30.3.0",
-    "nodemon": "^3.1.14",
-    "supertest": "^7.2.2"
+    "express": "...",
+    "cors": "...",
+    "dotenv": "..."
   }
 }

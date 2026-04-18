@@ -1,0 +1,115 @@
+[1mdiff --git a/apps/frontend/src/components/admin/AdminGate.jsx b/apps/frontend/src/components/admin/AdminGate.jsx[m
+[1mindex 0bc5bda..a1e8f35 100644[m
+[1m--- a/apps/frontend/src/components/admin/AdminGate.jsx[m
+[1m+++ b/apps/frontend/src/components/admin/AdminGate.jsx[m
+[36m@@ -24,21 +24,42 @@[m [mconst AdminGate = ({ children }) => {[m
+ [m
+   if (!isAuth) {[m
+     return ([m
+[31m-      <div className="h-screen flex items-center justify-center">[m
+[31m-        <div className="bg-white p-6 rounded-xl shadow-lg">[m
+[31m-          <h2 className="mb-4 font-semibold">Admin Access</h2>[m
+[31m-          <input[m
+[31m-            type="password"[m
+[31m-            placeholder="Enter password"[m
+[31m-            className="border p-2 w-full mb-3"[m
+[31m-            onChange={(e) => setInput(e.target.value)}[m
+[31m-          />[m
+[31m-          <button[m
+[31m-            onClick={handleLogin}[m
+[31m-            className="bg-black text-white px-4 py-2 w-full rounded"[m
+[31m-          >[m
+[31m-            Enter[m
+[31m-          </button>[m
+[32m+[m[32m      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100">[m
+[32m+[m
+[32m+[m[32m    <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">[m
+[32m+[m
+[32m+[m[32m      {/* TITLE */}[m
+[32m+[m[32m      <h2 className="text-2xl font-bold text-center mb-2">[m
+[32m+[m[32m        Admin Dashboard[m
+[32m+[m[32m      </h2>[m
+[32m+[m
+[32m+[m[32m      <p className="text-sm text-gray-500 text-center mb-6">[m
+[32m+[m[32m        Secure access to analytics[m
+[32m+[m[32m      </p>[m
+[32m+[m
+[32m+[m[32m      {/* INPUT */}[m
+[32m+[m[32m      <input[m
+[32m+[m[32m        type="password"[m
+[32m+[m[32m        placeholder="Enter admin password"[m
+[32m+[m[32m        className="[m
+[32m+[m[32m          border p-3 w-full mb-4 rounded-lg[m
+[32m+[m[32m          focus:outline-none focus:ring-2 focus:ring-purple-500[m
+[32m+[m[32m        "[m
+[32m+[m[32m        onChange={(e) => setInput(e.target.value)}[m
+[32m+[m[32m      />[m
+[32m+[m
+[32m+[m[32m      {/* BUTTON */}[m
+[32m+[m[32m      <button[m
+[32m+[m[32m        onClick={handleLogin}[m
+[32m+[m[32m        className="[m
+[32m+[m[32m          w-full py-3 rounded-lg text-white font-medium[m
+[32m+[m[32m          bg-gradient-to-r from-purple-600 to-pink-500[m
+[32m+[m[32m          hover:scale-105 transition[m
+[32m+[m[32m        "[m
+[32m+[m[32m      >[m
+[32m+[m[32m        Access Dashboard[m
+[32m+[m[32m      </button>[m
+[32m+[m
+         </div>[m
+       </div>[m
+     );[m
+[1mdiff --git a/apps/frontend/src/pages/Dashboard.jsx b/apps/frontend/src/pages/Dashboard.jsx[m
+[1mindex be727a6..0c0e3ee 100644[m
+[1m--- a/apps/frontend/src/pages/Dashboard.jsx[m
+[1m+++ b/apps/frontend/src/pages/Dashboard.jsx[m
+[36m@@ -1,6 +1,6 @@[m
+ import { useState, useEffect } from "react";[m
+ import { StatCard } from "../components/dashboard/StatCard";[m
+[31m-import { Briefcase, Users, BarChart3,Eye} from "lucide-react";[m
+[32m+[m[32mimport { Briefcase, Users, BarChart3,Eye, X, CurrencyDollar} from "lucide-react";[m
+ import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";[m
+ [m
+ [m
+[36m@@ -203,12 +203,12 @@[m [mconst Dashboard = () => {[m
+           />[m
+         <StatCard [m
+           title="Mentorship"[m
+[31m-          value={summary.memberships || 0}[m
+[32m+[m[32m          value={summary.MENTOR_ME || 0}[m
+           icon={Users}[m
+         />[m
+         <StatCard [m
+           title="Coffee Chats"[m
+[31m-          value={summary.coffee_chats || 0}[m
+[32m+[m[32m          value={summary.COFFEE_CHAT || 0}[m
+           icon={Users}[m
+         />[m
+         <StatCard [m
+[36m@@ -235,6 +235,25 @@[m [mconst Dashboard = () => {[m
+           icon={Users}[m
+         />[m
+ [m
+[32m+[m[32m        <StatCard[m[41m [m
+[32m+[m[32m          title="Close via X"[m
+[32m+[m[32m          value={closeByX|| 0}[m
+[32m+[m[32m          icon={X}[m
+[32m+[m[32m        />[m
+[32m+[m
+[32m+[m[32m        <StatCard[m[41m [m
+[32m+[m[32m          title="Estimated Revenue"[m
+[32m+[m[32m          value={`$${summary.revenue || 0}`}[m
+[32m+[m[32m          icon={CurrencyDollar}[m
+[32m+[m[32m        />[m
+[32m+[m
+[32m+[m
+[32m+[m[32m        <StatCard[m
+[32m+[m[32m          title="Top Plan"[m
+[32m+[m[32m          value={summary.top_plan || "—"}[m
+[32m+[m[32m          icon={BarChart3}[m
+[32m+[m[32m        />[m
+[32m+[m
+       </div>[m
+ [m
+       [m

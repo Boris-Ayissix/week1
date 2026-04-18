@@ -1,28 +1,37 @@
 import express from "express"; 
 import cors from "cors";
-import taskRoutes from "./routes/task.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+console.log("ENV PASSWORD:", process.env.ADMIN_PASSWORD);
 
 const app = express();
 
+/**
+ * CORS FIX (IMPORTANT)
+ */
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://https://branding-website-five.vercel.app/"
+  ]
+}));
 app.use(express.json());
 
-// Test route
+/**
+ * HEALTH CHECK
+ */
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Routes
-app.use("/api/tasks", taskRoutes);
+/**
+ * ANALYTICS ROUTES
+ */
 app.use("/api/analytics", analyticsRoutes);
 
-// Server
-const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 export default app;   // ← Important: Export the app so server.js can import it

@@ -1,7 +1,7 @@
 import React from "react";
 import HeroText from "./HeroText";
 import { trackEvent, EVENTS } from "../../utils/analytics";
-import ProfileCard from "./ProfileCard";
+import {ProfileCard} from "./ProfileCard";
 
 /**
  * Hero Section
