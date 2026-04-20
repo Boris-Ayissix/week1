@@ -64,7 +64,7 @@ const Dashboard = () => {
   const fetchData = async () => {
     try {
       //  Fetch EVENTS (for funnel)
-      const eventsRes = await fetch(`${BASE_URL}/api/analytics?password=${import.meta.env.VITE_ADMIN_PASSWORD}`, {
+      const eventsRes = await fetch(`${BASE_URL}/api/analytics`, {
         headers: {
           "x-admin-password": import.meta.env.VITE_ADMIN_PASSWORD,
         },
