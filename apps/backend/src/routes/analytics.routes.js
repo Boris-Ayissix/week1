@@ -1,4 +1,8 @@
 import express from "express";
+import { db } from "../db/index.js";
+import { events } from "../db/schema.js";
+import { eq } from "drizzle-orm";
+import pool from "../db.js";
 
 const router = express.Router();
 
@@ -27,21 +31,18 @@ const PLAN_PRICES = {
 };
 
 /**
- * SIMPLE ADMIN AUTH MIDDLEWARE
+ * ADMIN AUTH
  */
 const checkAdmin = (req, res, next) => {
   const password =
-    req.headers["x-admin-password"] ||
-    req.query.password; //  fallback for browser
+    req.headers["x-admin-password"] || req.query.password;
 
   if (password !== process.env.ADMIN_PASSWORD) {
-    console.log("❌ Wrong password:", password); // debug
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   next();
 };
-
 
 
 /**
@@ -55,44 +56,61 @@ const events = [];
  * =========================
  * Stores analytics event
  */
-router.post("/", (req, res) => {
-  const { event_name } = req.body;
-
-  // VALIDATION
-  if (!event_name) {
-    return res.status(400).json({
-      error: "event_name is required",
-    });
-  }
-
-  const event = {
-    ...req.body,
-    createdAt: new Date(),
-  };
-
-  events.push(event);
-
-  console.log("New Event:", event); // Debugging
-
-  res.status(201).json(event);
-});
-
 /**
- * =========================
- * GET ALL EVENTS (ADMIN PROTECTED)
- * =========================
+ * POST EVENT → STORE IN DB
  */
-router.get("/", checkAdmin, (req, res) => {
-  const apiKey = req.headers["x-admin-password"];
+router.post("/", async (req, res) => {
+  try {
+    const {
+      event_name,
+      page,
+      cta_id,
+      modal,
+      option,
+      plan,
+      type,
+      method,
+    } = req.body;
 
-  if (apiKey !== process.env.ADMIN_PASSWORD) {
-    return res.status(403).json({
-      error: "Forbidden",
-    });
+    if (!event_name) {
+      return res.status(400).json({ error: "event_name required" });
+    }
+
+    const result = await pool.query(
+      `
+      INSERT INTO events 
+      (event_name, page, cta_id, modal, option, plan, type, method)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      RETURNING *;
+      `,
+      [event_name, page, cta_id, modal, option, plan, type, method]
+    );
+
+    console.log("✅ Event saved:", result.rows[0]);
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("❌ DB INSERT ERROR:", err);
+    res.status(500).json({ error: "Database error" });
   }
-
-  res.json(events);
 });
+
+  /**
+ * GET ALL EVENTS
+ */
+  router.get("/", checkAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM events ORDER BY created_at DESC"
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ DB FETCH ERROR:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 
 /**
  * =========================
@@ -128,8 +146,8 @@ router.get("/filter", (req, res) => {
  * SUMMARY (DASHBOARD API)
  * =========================
  */
- router.get("/summary", checkAdmin, (req, res) => {
-
+ router.get("/summary", checkAdmin, async (req, res) => {
+    const allEvents = await db.select().from(events);
     let revenue = 0;
 
   /**
@@ -137,7 +155,7 @@ router.get("/filter", (req, res) => {
    */
   const planCounts = {};
 
-  events.forEach((e) => {
+  allEvents.forEach((e) => {
     if (e.event_name === "plan_selected") {
       const { type, plan } = e;
 
@@ -168,35 +186,37 @@ router.get("/filter", (req, res) => {
    * SUMMARY OBJECT
    */
 
+  const getCount = (name) =>
+    allEvents.filter(e => e.event_name === name).length;
+
   const summary = {
-    total_clicks: events.filter(e => e.event_name === "cta_click").length,
-    page_views: events.filter(e => e.event_name === "page_view").length,
+    page_views: getCount("page_view"),
+    total_clicks: getCount("cta_click"),
 
-    WORK_MODAL_OPENS: events.filter(
-      e => e.event_name === "modal_open" && e.modal === "WORK"
+    WORK_MODAL_OPENS: allEvents.filter(
+      e => e.event_name === "modal_open" && e.data?.modal === "WORK"
     ).length,
 
-    FREE_HELP_MODAL_OPENS: events.filter(
-      e => e.event_name === "modal_open" && e.modal === "FREE_HELP"
+    FREE_HELP_MODAL_OPENS: allEvents.filter(
+      e => e.event_name === "modal_open" && e.data?.modal === "FREE_HELP"
     ).length,
-
      /**
      * FIXED: USE option_selected INSTEAD OF cta_id
      */
 
-    DELIVER_PROJECT: events.filter(
-      e => e.event_name === "option_selected" && e.option === "DELIVER_PROJECT"
+    DELIVER_PROJECT: allEvents.filter(
+      e => e.event_name === "option_selected" && e.data?.option === "DELIVER_PROJECT"
     ).length,
 
-    MENTOR_ME: events.filter(
-      e => e.event_name === "option_selected" && e.option ===  "MENTOR_ME"
+    MENTOR_ME: allEvents.filter(
+      e => e.event_name === "option_selected" && e.data?.option ===  "MENTOR_ME"
     ).length,
 
-    COFFEE_CHAT: events.filter(
-      e => e.event_name === "option_selected" && e.option === "COFFEE_CHAT"
+    COFFEE_CHAT: allEvents.filter(
+      e => e.event_name === "option_selected" && e.data?.option === "COFFEE_CHAT"
     ).length,
 
-       /**
+       /**FIXED: REVENUE CALCULATION AND TOP PLAN
      * 💰 NEW METRICS
      */
     revenue,

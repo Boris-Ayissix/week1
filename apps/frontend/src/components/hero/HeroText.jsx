@@ -10,7 +10,7 @@ const HeroText = () => {
       {/* Heading */}
       <h1 className="text-5xl md:text-5xl font-bold leading-tight mb-">
         <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-          Build Fast, Simple Websites
+          Build Production-Ready Products Faster 
         </span>
         <br />
         That Grow Your Business.
@@ -18,12 +18,12 @@ const HeroText = () => {
 
       {/* Subheading */}
       <p className="text-lg text-gray-600 mb-4 max-w-lg">
-        Get a clean website that brings more customers, saves time, and helps your business make more money.
+        Stop guessing. Start shipping
       </p>
 
       {/* Paragraph */}
       <p className="text-sm text-gray-500 mb-8 max-w-md">
-       Simple tools that work fast and look great.
+       I help you design, build and launch real-world systems that
        <br />
        Turn visitors into paying clients without stress or confusion.
       </p>

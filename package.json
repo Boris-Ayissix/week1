@@ -7,12 +7,20 @@
     "packages/*"
   ],
   "engines": {
-  "node": "20.x"
-},
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "npm run dev --workspaces",
     "build": "npm run build --workspaces",
     "postinstall": "echo skip build",
     "start": "cd apps/backend && npm start"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
   }
 }
