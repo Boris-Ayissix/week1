@@ -1,8 +1,7 @@
 import express from "express";
-import { db } from "../db/index.js";
+import  pool  from "../db/index.js";
 import { events } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import pool from "../db.js";
 
 const router = express.Router();
 
@@ -48,7 +47,7 @@ const checkAdmin = (req, res, next) => {
 /**
  * TEMP DATA STORE (Replace with MongoDB later)
  */
-const events = [];
+const tempevents = [];
 
 /**
  * =========================
@@ -119,27 +118,39 @@ router.post("/", async (req, res) => {
  * Example:
  * /api/analytics/filter?event_name=cta_click
  */
-router.get("/filter", (req, res) => {
-  let filtered = [...events];
+ router.get("/filter", checkAdmin, async (req, res) => {
+  try {
+    const { event_name, cta_id } = req.query;
 
-  const { event_name, cta_id } = req.query;
+    // Build query dynamically with parameters to prevent SQL injection
+    let query = "SELECT * FROM events";
+    const conditions = [];
+    const values = [];
 
-  // FILTER BY EVENT TYPE
-  if (event_name) {
-    filtered = filtered.filter(
-      (e) => e.event_name === event_name
-    );
+    if (event_name) {
+      values.push(event_name);
+      conditions.push(`event_name = $${values.length}`);
+    }
+
+    if (cta_id) {
+      values.push(cta_id);
+      conditions.push(`cta_id = $${values.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query += " WHERE " + conditions.join(" AND ");
+    }
+
+    query += " ORDER BY created_at DESC";
+
+    const result = await pool.query(query, values);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ FILTER ERROR:", err);
+    res.status(500).json({ error: "Database error" });
   }
-
-  // FILTER BY CTA
-  if (cta_id) {
-    filtered = filtered.filter(
-      (e) => e.cta_id === cta_id
-    );
-  }
-
-  res.json(filtered);
 });
+
 
 /**
  * =========================
@@ -147,90 +158,70 @@ router.get("/filter", (req, res) => {
  * =========================
  */
  router.get("/summary", checkAdmin, async (req, res) => {
-    const allEvents = await db.select().from(events);
+  try {
+    const result = await pool.query("SELECT * FROM events");
+
+    const events = result.rows;
+
     let revenue = 0;
+    const planCounts = {};
 
-  /**
-   * Track plan performance
-   */
-  const planCounts = {};
+    events.forEach((e) => {
+      if (e.event_name === "plan_selected") {
+        const price = PLAN_PRICES[e.type]?.[e.plan] || 0;
+        revenue += price;
 
-  allEvents.forEach((e) => {
-    if (e.event_name === "plan_selected") {
-      const { type, plan } = e;
+        const key = `${e.type}_${e.plan}`;
+        planCounts[key] = (planCounts[key] || 0) + 1;
+      }
+    });
 
-      // Revenue calculation
-      const price = PLAN_PRICES[type]?.[plan] || 0;
-      revenue += price;
+    let topPlan = null;
+    let max = 0;
 
-      // Count plan usage
-      const key = `${type}_${plan}`;
-      planCounts[key] = (planCounts[key] || 0) + 1;
+    for (const key in planCounts) {
+      if (planCounts[key] > max) {
+        max = planCounts[key];
+        topPlan = key;
+      }
     }
-  });
 
-  /**
-   * FIND TOP PERFORMING PLAN
-   */
-  let topPlan = null;
-  let max = 0;
+    const summary = {
+      total_clicks: events.filter(e => e.event_name === "cta_click").length,
+      page_views: events.filter(e => e.event_name === "page_view").length,
 
-  for (const key in planCounts) {
-    if (planCounts[key] > max) {
-      max = planCounts[key];
-      topPlan = key;
-    }
+      WORK_MODAL_OPENS: events.filter(
+        e => e.event_name === "modal_open" && e.modal === "WORK"
+      ).length,
+
+      FREE_HELP_MODAL_OPENS: events.filter(
+        e => e.event_name === "modal_open" && e.modal === "FREE_HELP"
+      ).length,
+
+      DELIVER_PROJECT: events.filter(
+        e => e.event_name === "option_selected" && e.option === "DELIVER_PROJECT"
+      ).length,
+
+      MENTOR_ME: events.filter(
+        e => e.event_name === "option_selected" && e.option === "MENTOR_ME"
+      ).length,
+
+      COFFEE_CHAT: events.filter(
+        e => e.event_name === "option_selected" && e.option === "COFFEE_CHAT"
+      ).length,
+
+      revenue,
+      top_plan: topPlan || "No data yet",
+    };
+
+    res.json(summary);
+  } catch (err) {
+    console.error("❌ SUMMARY ERROR:", err);
+    res.status(500).json({ error: "Database error" });
   }
-
-  /**
-   * SUMMARY OBJECT
-   */
-
-  const getCount = (name) =>
-    allEvents.filter(e => e.event_name === name).length;
-
-  const summary = {
-    page_views: getCount("page_view"),
-    total_clicks: getCount("cta_click"),
-
-    WORK_MODAL_OPENS: allEvents.filter(
-      e => e.event_name === "modal_open" && e.data?.modal === "WORK"
-    ).length,
-
-    FREE_HELP_MODAL_OPENS: allEvents.filter(
-      e => e.event_name === "modal_open" && e.data?.modal === "FREE_HELP"
-    ).length,
-     /**
-     * FIXED: USE option_selected INSTEAD OF cta_id
-     */
-
-    DELIVER_PROJECT: allEvents.filter(
-      e => e.event_name === "option_selected" && e.data?.option === "DELIVER_PROJECT"
-    ).length,
-
-    MENTOR_ME: allEvents.filter(
-      e => e.event_name === "option_selected" && e.data?.option ===  "MENTOR_ME"
-    ).length,
-
-    COFFEE_CHAT: allEvents.filter(
-      e => e.event_name === "option_selected" && e.data?.option === "COFFEE_CHAT"
-    ).length,
-
-       /**FIXED: REVENUE CALCULATION AND TOP PLAN
-     * 💰 NEW METRICS
-     */
-    revenue,
-    top_plan: topPlan || "No data yet",
-  };
-
-  /**
-   * Add plan performance data
-   */
-  for (const key in planCounts) {
-    summary[key] = planCounts[key];
-  };
-
-  res.json(summary);
 });
 
 export default router;
+
+
+
