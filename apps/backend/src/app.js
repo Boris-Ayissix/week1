@@ -16,7 +16,8 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",//local dev
   "https://branding-website-five.vercel.app",//production frontend
-  "https://brandingwebsite-git-main-boris-ayissixs-projects.vercel.app"
+  "https://brandingwebsite-git-main-boris-ayissixs-projects.vercel.app",
+  "https://week1-frontend-wfzr.vercel.app", // preview deployment (remove if not needed)
 ];
 
 app.use(cors({
