@@ -193,6 +193,8 @@ router.post("/", async (req, res) => {
         e => e.event_name === "modal_open" && e.data?.modal === "FREE_HELP"
       ).length,
 
+      //Option Selected Plans
+
       DELIVER_PROJECT: events.filter(
         e => e.event_name === "option_selected" && e.data?.option === "DELIVER_PROJECT"
       ).length,
@@ -204,6 +206,30 @@ router.post("/", async (req, res) => {
       COFFEE_CHAT: events.filter(
         e => e.event_name === "option_selected" && e.data?.option === "COFFEE_CHAT"
       ).length,
+
+      // FREE HELP OPTIONS
+      SITE_AUDIT: events.filter(
+      e => e.event_name === "option_selected" && e.data?.option === "SITE_AUDIT"
+    ).length,
+
+      CHAT_15MIN: events.filter(
+      e => e.event_name === "option_selected" && e.data?.option === "CHAT_15MIN"
+    ).length,
+
+      TECH_CATCHUP: events.filter(
+      e => e.event_name === "option_selected" && e.data?.option === "TECH_CATCHUP"
+    ).length,
+
+    // COMPLETED
+    completed: events.filter(
+      e => e.event_name === "journey_completed"
+    ).length,
+
+    //  ABANDONED
+    abandoned: events.filter(
+      e => e.event_name === "journey_abandoned"
+    ).length,
+
 
       revenue,
       top_plan: topPlan || "No data yet",

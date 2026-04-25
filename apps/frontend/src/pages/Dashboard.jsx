@@ -16,6 +16,12 @@ const Dashboard = () => {
 
    const BASE_URL = import.meta.env.VITE_API_URL;
 
+   const password = sessionStorage.getItem("admin_password");
+   if (!password) {
+  window.location.reload(); // or redirect to login
+  return;
+}
+
    /**
    * =========================
    * FETCH EVENTS (FOR FUNNEL)
@@ -62,34 +68,39 @@ const Dashboard = () => {
    * FUNCTION TO FETCH BOTH EVENTS + SUMMARY
    */
   const fetchData = async () => {
-    try {
-      //  Fetch EVENTS (for funnel)
-      const eventsRes = await fetch(`${BASE_URL}/api/analytics`, {
-        headers: {
-          "x-admin-password": import.meta.env.VITE_ADMIN_PASSWORD,
-        },
-      });
+  try {
+    const password = sessionStorage.getItem("admin_password");
 
-      const eventsData = await eventsRes.json();
-
-      setEvents(Array.isArray(eventsData) ? eventsData : []);
-
-      // 🔹 Fetch SUMMARY (for KPIs)
-      const summaryRes = await fetch(`${BASE_URL}/api/analytics/summary`, {
+    // 🚀 Fetch EVENTS
+    const eventsRes = await fetch(`${BASE_URL}/api/analytics`, {
       headers: {
-        "x-admin-password": import.meta.env.VITE_ADMIN_PASSWORD,
+        "x-admin-password": password,
       },
     });
 
-      const summaryData = await summaryRes.json();
+    if (!eventsRes.ok) throw new Error("Events fetch failed");
 
-      setSummary(summaryData);
+    const eventsData = await eventsRes.json();
+    setEvents(Array.isArray(eventsData) ? eventsData : []);
 
-    } catch (err) {
-      console.error("Dashboard refresh error:", err);
-    }
-  };
+    // 🚀 Fetch SUMMARY
+    const summaryRes = await fetch(`${BASE_URL}/api/analytics/summary`, {
+      headers: {
+        "x-admin-password": password,
+      },
+    });
 
+    if (!summaryRes.ok) throw new Error("Summary fetch failed");
+
+    const summaryData = await summaryRes.json();
+    setSummary(summaryData);
+
+  } catch (err) {
+  console.error("Dashboard refresh error:", err);
+  setSummary({});
+  setEvents([]);
+}
+};
       /**
        * INITIAL LOAD
        */
@@ -119,9 +130,7 @@ const Dashboard = () => {
     //   (e) => e.event_name === "cta_click"
     // ).length
 
-    const closeByX = events.filter(e => 
-      e.event_name === "modal_close" && e.method === "close_icon" // ✅ FIXED
-    ).length;
+    
 
     /**
  * COUNT MODAL OPENS (Slice 16)
@@ -157,11 +166,11 @@ const Dashboard = () => {
    * =========================
    */
     const ctaClicks = safeEvents.filter(e =>
-      e.event_name === "cta_click" && e.cta_id === "WORK"
+      e.event_name === "cta_click" && e.data?.cta_id === "WORK"
     ).length;
 
     const modalOpens = safeEvents.filter(e =>
-      e.event_name === "modal_open" && e.modal === "WORK"
+      e.event_name === "modal_open" && e.data?.modal === "WORK"
     ).length;
 
     const optionSelected = safeEvents.filter(e =>
@@ -174,6 +183,10 @@ const Dashboard = () => {
 
     const planSelected = safeEvents.filter(e =>
       e.event_name === "plan_selected"
+    ).length;
+
+    const closeByX = safeEvents.filter(e => 
+      e.event_name === "modal_close" && e.data?.method === "close_icon"
     ).length;
 
     const conversion = (from, to) =>
@@ -189,6 +202,9 @@ const Dashboard = () => {
         { name: "Deliver", value: summary.DELIVER_PROJECT || 0 },
         { name: "Mentor", value: summary.MENTOR_ME || 0 },
         { name: "Coffee", value: summary.COFFEE_CHAT || 0 },
+        { name: "Site Audit", value: summary.SITE_AUDIT || 0 },
+        { name: "15min Chat", value: summary.CHAT_15MIN || 0 },
+        { name: "Tech Catchup", value: summary.TECH_CATCHUP || 0 },
       ]
 
       const formatPlan = (plan) => {
@@ -203,6 +219,15 @@ const Dashboard = () => {
           };
 
           return `${labels[type]} - ${tier}`;
+        };
+
+
+        /**
+         * Logout function
+         */
+        const logout = () => {
+          sessionStorage.removeItem("admin_password");
+          window.location.reload();
         };
 
   return (
@@ -268,6 +293,12 @@ const Dashboard = () => {
           icon={BarChart3}
         />
 
+        <StatCard title="Site Audit" value={summary.SITE_AUDIT || 0} icon={BarChart3} />
+        <StatCard title="15min Chat" value={summary.CHAT_15MIN || 0} icon={Users} />
+        <StatCard title="Tech Catchup" value={summary.TECH_CATCHUP || 0} icon={Users} />
+        <StatCard title="Completed" value={summary.completed || 0} icon={Briefcase} />
+        <StatCard title="Abandoned" value={summary.abandoned || 0} icon={X} />
+
       </div>
 
       
@@ -319,6 +350,10 @@ const Dashboard = () => {
             <span>{conversion(planViewed, planSelected)}%</span>
           </div>
         </div>
+
+        <button onClick={logout} className="w-full py-3 rounded-lg text-white font-medium bg-gradient-to-r from-purple-600 to-pink-500 hover:scale-105 transition">
+          Logout
+        </button>
       </div>
       </div>
     </div>

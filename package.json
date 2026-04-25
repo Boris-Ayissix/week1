@@ -10,10 +10,9 @@
     "node": "20.x"
   },
   "scripts": {
-    "dev": "npm run dev --workspaces",
-    "build": "npm run build --workspaces",
-    "postinstall": "echo skip build",
-    "start": "cd apps/backend && npm start"
+    "dev": "concurrently \"npm run dev --prefix apps/frontend\" \"npm run dev --prefix apps/backend\"",
+    "build": "npm run build --prefix apps/frontend",
+    "start": "node apps/backend/server.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

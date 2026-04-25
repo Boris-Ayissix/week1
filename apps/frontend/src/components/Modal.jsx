@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { useEffect, useState, useRef } from "react";
 import { trackEvent, EVENTS } from "../utils/analytics";
-import { Rocket, Target, Coffee, X } from "lucide-react";
+import { Rocket, Target, Coffee, X, Phone, Users, Globe } from "lucide-react";
 import PlanCard from "./PlanCard";
 import { useCallback } from "react";
 
@@ -15,37 +15,45 @@ export const Modal = ({ type, onClose }) => {
   const [view, setView] = useState("selection"); // selection | plans
   const [selectedType, setSelectedType] = useState(null);
 
-
  
+
+
   /**
-   * =========================
-   * CENTRALIZED CLOSE FUNCTION (UPGRADED)
-   * Tracks HOW user closes modal (CRITICAL ANALYTICS)
-   * - close_icon (X button)
-   * - backdrop
-   * - ESC
-   * - plan selection (conversion point, important to track)
-   * - unknown (fallback for any untracked close method)
-   * Also resets modal state for next open (important for UX)
-   *- Tracks if user left from selection or plans (important for funnel analysis)
-   * - view state tells us where user is in modal (selection vs plans) when they close, which is critical for understanding drop-off points in the funnel 
-   * - method state tells us how user closed the modal, which is important for understanding drop-off points in the funnel
-   * - Wrapping in useCallback to prevent unnecessary re-renders and ensure stable function reference for event listeners
-   * =========================
-   */
-  const handleClose = useCallback((method = "unknown") => {
-    trackEvent(EVENTS.MODAL_CLOSE, {
-      modal: type,
-      method, //  key insight (X, backdrop, ESC)
-      view,   //  tells if user left from selection or plans
+ * DETECT ABANDONMENT
+ * If user closes modal WITHOUT selecting a plan → abandoned
+ */
+const handleClose = useCallback((method = "unknown") => {
+
+  // Detect abandonment
+  if (view === "plans" && selectedType) {
+    trackEvent(EVENTS.JOURNEY_ABANDONED, {
+      type: selectedType,
+      step: "plans",
+      method,
     });
+  }
 
-    // Reset state
-    setView("selection");
-    setSelectedType(null);
+  if (view === "selection") {
+    trackEvent(EVENTS.JOURNEY_ABANDONED, {
+      type: "unknown",
+      step: "selection",
+      method,
+    });
+  }
 
-    onClose();
-  }, [type, view, onClose]);
+  // Always track close
+  trackEvent(EVENTS.MODAL_CLOSE, {
+    modal: type,
+    method,
+    view,
+  });
+
+  setView("selection");
+  setSelectedType(null);
+
+  onClose();
+
+}, [type, view, selectedType, onClose]);
 
 
   /**
@@ -62,8 +70,10 @@ export const Modal = ({ type, onClose }) => {
 
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
+  }, [handleClose]);
 
+
+    
 
     /**
       *TRACK WHEN USER REACHES PRICING
@@ -85,6 +95,7 @@ export const Modal = ({ type, onClose }) => {
     }, [view, selectedType]);
 
 
+    
   
   /**
    * =========================
@@ -92,19 +103,49 @@ export const Modal = ({ type, onClose }) => {
    * =========================
    */
   const handleSelection = (cta) => {
-    /**
-      *STEP 3: OPTION SELECTED (FUNNEL)
-      */
-    trackEvent(EVENTS.OPTION_SELECTED, {
-      option: cta,
-    });
+  trackEvent(EVENTS.OPTION_SELECTED, {
+    option: cta,
+  });
 
-    setSelectedType(cta);
-    setView("plans"); // move to plans
-  };
+  /**
+   * 🔥 FREE HELP FLOW (NO PLANS)
+   */
+  if (type === "FREE_HELP") {
+
+    // Route based on selection
+    if (cta === "SITE_AUDIT") {
+      window.open("/audit-form", "_blank");
+      handleClose("site_audit_redirect");
+      return;
+    }
+
+    if (cta === "CHAT_15MIN") {
+      window.open("https://calendly.com/your-link", "_blank");
+      handleClose("chat_15min_redirect");
+      return;
+    }
+
+    if (cta === "TECH_CATCHUP") {
+      window.open("/community", "_blank");
+      handleClose("tech_catchup_redirect");
+      return;
+    }
+
+    // Close modal after action
+    handleClose("free_help_selected");
+    return;
+  }
+
+  /**
+   *  NORMAL FLOW (WORK / MENTOR / COFFEE)
+   */
+  setSelectedType(cta);
+  setView("plans");
+};
+
 
   
-    
+
 
   /**
    * =========================
@@ -210,6 +251,27 @@ const plans = {
       ],
     },
   ],
+
+  FREE_HELP: [
+  {
+    name: "Site Audit",
+    price: "$0",
+    desc: "Full website analysis",
+    features: ["UX review", "Performance audit", "Action plan"],
+  },
+  {
+    name: "15 Min Chat",
+    price: "$0",
+    desc: "Quick consultation",
+    features: ["Live advice", "Problem solving"],
+  },
+  {
+    name: "Tech CatchUp",
+    price: "$0",
+    desc: "Group session",
+    features: ["Community learning", "Q&A"],
+  },
+],
 };
 
   /**
@@ -223,7 +285,7 @@ const plans = {
       {/* BACKDROP */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={() => handleClose("backdrop_click")} //Track
+        onClick={() => handleClose("backdrop_click")}
       />
 
       {/* MODAL */}
@@ -249,7 +311,7 @@ const plans = {
             {/* CLOSE BUTTON (TOP RIGHT) */}
             {/* ========================= */}
             <button
-              onClick={() => handleClose("close_icon")} // Track close source
+              onClick={() => handleClose("close_icon")}
               className="
                 absolute top-4 right-4 text-gray-400 hover:text-black text-xl
               "
@@ -257,6 +319,8 @@ const plans = {
               X
             </button>
 
+           {type === "WORK" && (
+         <>
             {/* DELIVER */}
             <div
               onClick={() => handleSelection("DELIVER_PROJECT")}
@@ -321,9 +385,94 @@ const plans = {
                 <li>Less confusion</li> 
               </ul>
             </div>
+          </>
+           )}
 
+           {type === "FREE_HELP" && (
+            <>
+         {/* SITE AUDIT */}
+            <div
+              onClick={() => handleSelection("SITE_AUDIT")}
+              className="p-6 bg-white rounded-2xl border hover:shadow-2xl hover:-translate-y-2 transition cursor-pointer">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-3 mb-3 w-fit rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                  <Globe />
+                </div>
+                <h3 className="font-semibold">Site Audit</h3>
+              </div>
+
+              {/* DESCRIPTION */}
+              <p className="text-sm text-gray-600 mb-3">
+                Discover what’s holding your website back.
+              </p>
+
+              {/* METRICS */}
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>2x better UX clarity</li>
+                <li>Faster load performance</li>
+                <li>Higher conversion potential</li>
+              </ul>
+            </div>
+
+
+            {/* 15 MIN CHAT */}
+            <div
+              onClick={() => handleSelection("CHAT_15MIN")}
+              className="p-6 bg-white rounded-2xl border hover:shadow-2xl hover:-translate-y-2 transition cursor-pointer"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-3 mb-3 w-fit rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+                  <Phone />
+                </div>
+                <h3 className="font-semibold">15 Min Chat</h3>
+              </div>
+
+              {/* DESCRIPTION */}
+              <p className="text-sm text-gray-600 mb-3">
+                Get instant clarity on your biggest blocker.
+              </p>
+
+              {/* METRICS */}
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>Immediate expert feedback</li>
+                <li>Clear next steps</li>
+                <li>Faster decision making</li>
+              </ul>
+            </div>
+
+
+            {/* TECH CATCHUP */}
+            <div
+              onClick={() => handleSelection("TECH_CATCHUP")}
+              className="p-6 bg-white rounded-2xl border hover:shadow-2xl hover:-translate-y-2 transition cursor-pointer"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-3 mb-3 w-fit rounded-xl bg-gradient-to-r from-orange-400 to-yellow-400 text-white">
+                  <Users />
+                </div>
+                <h3 className="font-semibold">Tech CatchUp</h3>
+              </div>
+
+              {/* DESCRIPTION */}
+              <p className="text-sm text-gray-600 mb-3">
+                Learn, share, and grow with other builders.
+              </p>
+
+              {/* METRICS */}
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>Real-world problem solving</li>
+                <li>Live Q&A sessions</li>
+                <li>Stay sharp & up-to-date</li>
+              </ul>
+            </div>
+          </>
+          )}
+          
           </div>
         )}
+
+        
+
 
         {/* ========================= */}
         {/* PLANS VIEW */}

@@ -1,17 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import HeroText from "./HeroText";
 import { trackEvent, EVENTS } from "../../utils/analytics";
-import  ProfileCard  from "./ProfileCard";
-import { useEffect } from "react";
+import ProfileCard from "./ProfileCard";
+import Modal from "../Modal";
 
 /**
  * Hero Section
  * Handles CTA clicks + tracking + modal opening
  */
 const HeroSection = ({ onOpenModal = () => {} }) => {
+  const [activeModal, setActiveModal] = useState(null);
+
+  const openModal = (type) => {
+    console.log("Opening modal:", type);
+    setActiveModal(type);
+    onOpenModal(type);
+  };
 
   useEffect(() => {
-  trackEvent(EVENTS.HERO_VIEWED);
+    trackEvent(EVENTS.HERO_VIEWED);
   }, []);
 
   /*
@@ -39,28 +46,32 @@ const HeroSection = ({ onOpenModal = () => {} }) => {
 
           trackEvent(EVENTS.CTA_CLICK, { cta_id: cta }); // NEW: Track which CTA was clicked
 
-        if (cta === "WORK") {
-          trackEvent(EVENTS.WORK_WITH_ME_CLICKED);
-        }
-        
+      if (cta === "WORK") {
+        trackEvent(EVENTS.WORK_WITH_ME_CLICKED);
+      } else if (cta === "FREE_HELP") {
+        trackEvent(EVENTS.FREE_HELP_CLICKED);
+      }
+
       /**
        * STEP 2: MODAL OPEN (FUNNEL STEP)
        * This is crucial for Slice 14 - we need to track not just the click, but the fact that it led to a modal opening. This allows us to analyze drop-off between clicking and engaging with the modal content.
        */
 
+      trackEvent(EVENTS.MODAL_OPEN, { modal: cta }); // NEW: Track which modal is opened
 
-      // Track CTA click (already implemented)
-      if (cta === "FREE_HELP") {
-        trackEvent(EVENTS.FREE_HELP_CLICKED);
-      }
-
-        trackEvent(EVENTS.MODAL_OPEN, { modal: cta }); // NEW: Track which modal is opened
-
-      onOpenModal(cta);
+      openModal(cta);
     };
 
   return (
-    <section className="relative min-h-[100vh] flex items-center justify-center px-6 overflow-hidden">
+    <>
+      {activeModal && (
+        <Modal
+          type={activeModal}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+
+      <section className="relative min-h-[100vh] flex items-center justify-center px-6 overflow-hidden">
 
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-100" />
@@ -106,6 +117,7 @@ const HeroSection = ({ onOpenModal = () => {} }) => {
 
       </div>
     </section>
+    </>
   );
 };
 
