@@ -2,12 +2,28 @@ import React from "react";
 import HeroText from "./HeroText";
 import { trackEvent, EVENTS } from "../../utils/analytics";
 import  ProfileCard  from "./ProfileCard";
+import { useEffect } from "react";
 
 /**
  * Hero Section
  * Handles CTA clicks + tracking + modal opening
  */
 const HeroSection = ({ onOpenModal = () => {} }) => {
+
+  useEffect(() => {
+  trackEvent(EVENTS.HERO_VIEWED);
+  }, []);
+
+  /*
+  * Given you also track HERO_VIEWED, it’s cleaner to keep one canonical page‑view event and disable the generic page_view
+  */
+
+  // const hasTracked = useRef(false);
+  // useEffect(() => {
+  // if (hasTracked.current) return;
+  // trackEvent("page_view");
+  // hasTracked.current = true;
+  // }, []);
 
   /**
    * Handles CTA click
@@ -20,21 +36,28 @@ const HeroSection = ({ onOpenModal = () => {} }) => {
       /**
        * STEP 1: CTA CLICK
        */
-      trackEvent(EVENTS.CTA_CLICK, { cta_id: cta });
+
+          trackEvent(EVENTS.CTA_CLICK, { cta_id: cta }); // NEW: Track which CTA was clicked
+
+        if (cta === "WORK") {
+          trackEvent(EVENTS.WORK_WITH_ME_CLICKED);
+        }
         
       /**
        * STEP 2: MODAL OPEN (FUNNEL STEP)
        * This is crucial for Slice 14 - we need to track not just the click, but the fact that it led to a modal opening. This allows us to analyze drop-off between clicking and engaging with the modal content.
        */
 
-      trackEvent(EVENTS.MODAL_OPEN, { modal: cta });
 
       // Track CTA click (already implemented)
-      trackEvent(EVENTS.CTA_CLICK, { cta_id: cta });
+      if (cta === "FREE_HELP") {
+        trackEvent(EVENTS.FREE_HELP_CLICKED);
+      }
 
-      // Open modal
+        trackEvent(EVENTS.MODAL_OPEN, { modal: cta }); // NEW: Track which modal is opened
+
       onOpenModal(cta);
-      };
+    };
 
   return (
     <section className="relative min-h-[100vh] flex items-center justify-center px-6 overflow-hidden">
@@ -73,7 +96,8 @@ const HeroSection = ({ onOpenModal = () => {} }) => {
           </button>
 
         </div>
-                </div>
+        
+        </div>
 
         {/* RIGHT */}
         <div className="flex justify-center md:justify-end">

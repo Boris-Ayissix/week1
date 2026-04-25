@@ -25,7 +25,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
+      return callback(null, true)
     } else {
       return callback(new Error("Not allowed by CORS"));
     }
@@ -52,6 +52,8 @@ app.get("/", (req, res) => {
  * ANALYTICS ROUTES
  */
 app.use("/api/analytics", analyticsRoutes);
+
+
 
 
 

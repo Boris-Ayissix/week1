@@ -1,7 +1,8 @@
 import PropTypes from "prop-types";
 
-export const StatCard = ({ title, value, icon: Icon }) => {
+export const StatCard = ({ title, value, icon }) => {
     console.log("StatCard rendered");
+    const Icon = icon;
         
   return (
     <div className="bg-white shadow-md rounded-xl p-6 flex items-center gap-4">

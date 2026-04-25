@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { trackEvent, EVENTS } from "../utils/analytics";
 import { Rocket, Target, Coffee, X } from "lucide-react";
 import PlanCard from "./PlanCard";
@@ -69,11 +69,18 @@ export const Modal = ({ type, onClose }) => {
       *TRACK WHEN USER REACHES PRICING
       *(VERY IMPORTANT FOR CONVERSION)
     */
+    const hasTrackedPlanView = useRef(false);
+
     useEffect(() => {
-      if (view === "plans" && selectedType) {
+      if (view === "plans" && selectedType && !hasTrackedPlanView.current ) {
         trackEvent(EVENTS.PLAN_VIEWED, {
           type: selectedType,
         });
+        hasTrackedPlanView.current = true;
+      }
+      // reset flag if user goes back to selection
+      if (view === "selection") {
+        hasTrackedPlanView.current = false;
       }
     }, [view, selectedType]);
 
@@ -95,6 +102,9 @@ export const Modal = ({ type, onClose }) => {
     setSelectedType(cta);
     setView("plans"); // move to plans
   };
+
+  
+    
 
   /**
    * =========================
@@ -318,6 +328,7 @@ const plans = {
         {/* ========================= */}
         {/* PLANS VIEW */}
         {/* ========================= */}
+
         {view === "plans" && selectedType && (
           <>
             {/* BACK */}
@@ -362,6 +373,11 @@ const plans = {
                       type: selectedType,
                       plan: plan.name,
                     });
+
+                    // STEP 4: JOURNEY COMPLETED
+                      trackEvent(EVENTS.JOURNEY_COMPLETED, {
+                      type: selectedType,
+                      });
 
                     //OPTIONAL: Add more detailed tracking here (e.g. which features were most attractive)
                       trackEvent("conversion_step", {

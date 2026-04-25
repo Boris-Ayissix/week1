@@ -46,8 +46,9 @@ const checkAdmin = (req, res, next) => {
 
 /**
  * TEMP DATA STORE (Replace with MongoDB later)
+ * This is a simple in-memory array to store events for now. In production, this should be replaced with a proper database like MongoDB or PostgreSQL.
  */
-const tempevents = [];
+//const tempevents = [];
 
 /**
  * =========================
@@ -60,39 +61,33 @@ const tempevents = [];
  */
 router.post("/", async (req, res) => {
   try {
-    const {
-      event_name,
-      page,
-      cta_id,
-      modal,
-      option,
-      plan,
-      type,
-      method,
-    } = req.body;
+    const { event_name, ...rest } = req.body;
 
-    if (!event_name) {
-      return res.status(400).json({ error: "event_name required" });
+    if (!event_name || typeof event_name !== "string") {
+      return res.status(400).json({ error: "event_name must be a string" });
     }
 
+    // ✅ Fixed query
     const result = await pool.query(
-      `
-      INSERT INTO events 
-      (event_name, page, cta_id, modal, option, plan, type, method)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-      RETURNING *;
-      `,
-      [event_name, page, cta_id, modal, option, plan, type, method]
+      "INSERT INTO events (event_name, data) VALUES ($1, $2::jsonb) RETURNING *",
+      [event_name, rest]
     );
-
-    console.log("✅ Event saved:", result.rows[0]);
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error("❌ DB INSERT ERROR:", err);
+    console.error("❌ DB INSERT ERROR:", err.message);
+    console.error("CODE:", err.code);
+    console.error("DETAIL:", err.detail);
     res.status(500).json({ error: "Database error" });
+    console.log("DB URL:", process.env.DATABASE_URL);
   }
 });
+
+  // SIMULATED ANALYTICS ENDPOINT (REPLACE WITH DB LOGIC)
+  router.get("/ping", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 
   /**
  * GET ALL EVENTS
@@ -134,7 +129,7 @@ router.post("/", async (req, res) => {
 
     if (cta_id) {
       values.push(cta_id);
-      conditions.push(`cta_id = $${values.length}`);
+      conditions.push(`data->>cta_id = $${values.length}`);
     }
 
     if (conditions.length > 0) {
@@ -168,10 +163,10 @@ router.post("/", async (req, res) => {
 
     events.forEach((e) => {
       if (e.event_name === "plan_selected") {
-        const price = PLAN_PRICES[e.type]?.[e.plan] || 0;
+        const price = PLAN_PRICES[e.data?.type]?.[e.data?.plan] || 0;
         revenue += price;
 
-        const key = `${e.type}_${e.plan}`;
+        const key = `${e.data?.type}_${e.data?.plan}`;
         planCounts[key] = (planCounts[key] || 0) + 1;
       }
     });
@@ -191,23 +186,23 @@ router.post("/", async (req, res) => {
       page_views: events.filter(e => e.event_name === "page_view").length,
 
       WORK_MODAL_OPENS: events.filter(
-        e => e.event_name === "modal_open" && e.modal === "WORK"
+        e => e.event_name === "modal_open" && e.data?.modal === "WORK"
       ).length,
 
       FREE_HELP_MODAL_OPENS: events.filter(
-        e => e.event_name === "modal_open" && e.modal === "FREE_HELP"
+        e => e.event_name === "modal_open" && e.data?.modal === "FREE_HELP"
       ).length,
 
       DELIVER_PROJECT: events.filter(
-        e => e.event_name === "option_selected" && e.option === "DELIVER_PROJECT"
+        e => e.event_name === "option_selected" && e.data?.option === "DELIVER_PROJECT"
       ).length,
 
       MENTOR_ME: events.filter(
-        e => e.event_name === "option_selected" && e.option === "MENTOR_ME"
+        e => e.event_name === "option_selected" && e.data?.option === "MENTOR_ME"
       ).length,
 
       COFFEE_CHAT: events.filter(
-        e => e.event_name === "option_selected" && e.option === "COFFEE_CHAT"
+        e => e.event_name === "option_selected" && e.data?.option === "COFFEE_CHAT"
       ).length,
 
       revenue,

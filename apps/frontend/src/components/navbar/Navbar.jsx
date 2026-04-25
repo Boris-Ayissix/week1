@@ -1,4 +1,3 @@
-import {useNavigate} from 'react-router-dom';
 /**
  * ADMIN ACCESS (DISCREET)
  * Only for you, not user-facing CTA
@@ -6,7 +5,6 @@ import {useNavigate} from 'react-router-dom';
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  const navigate = useNavigate();
   <Link
     to="/dashboard"
     className="text-xs text-gray-400 hover:text-black transition"
